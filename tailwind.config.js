@@ -6,35 +6,49 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+        bg: {
+          0: 'var(--bg-0)',
+          1: 'var(--bg-1)',
+          2: 'var(--bg-2)',
+          3: 'var(--bg-3)',
         },
-        gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
-        }
+        border: {
+          subtle: 'var(--border-subtle)',
+          strong: 'var(--border-strong)',
+        },
+        textc: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          tertiary: 'var(--text-tertiary)',
+        },
+        acc: {
+          iris: 'var(--acc-iris)',
+          cyan: 'var(--acc-cyan)',
+          lime: 'var(--acc-lime)',
+        },
+        intent: {
+          success: 'var(--success)',
+          warning: 'var(--warning)',
+          danger: 'var(--danger)',
+        },
+      },
+      boxShadow: {
+        'elev-2': '0 0 0 1px var(--border-subtle) inset, 0 10px 30px rgba(126,107,255,0.14), 0 4px 20px rgba(0,0,0,0.55)',
+        'glow-accent': '0 0 40px rgba(0,229,255,0.12), 0 0 24px rgba(126,107,255,0.18)',
+      },
+      borderRadius: {
+        'machine-card': '20px',
+        'machine-pill': '999px',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-      }
+        inter: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        spaceg: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        bebas: ['"Bebas Neue"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        plexmono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
     },
   },
   plugins: [],
 }
+
+

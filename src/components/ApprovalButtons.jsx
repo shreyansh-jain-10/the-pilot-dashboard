@@ -28,13 +28,16 @@ const ApprovalButtons = ({ onApprove, onReject, loading, isRevision = false }) =
   return (
     <div className="space-y-4">
       {showFeedback && (
-        <div className="card bg-red-50 border-red-200">
-          <h3 className="text-lg font-semibold text-red-800 mb-3">
+        <div className="machine-card" style={{ 
+          backgroundColor: 'rgba(255,94,102,0.1)',
+          border: '1px solid var(--danger)'
+        }}>
+          <h3 className="text-lg font-semibold mb-3 font-spaceg" style={{ color: 'var(--danger)' }}>
             Request Changes
           </h3>
           <div className="space-y-3">
             <div>
-              <label htmlFor="feedback" className="block text-sm font-medium text-red-700 mb-2">
+              <label htmlFor="feedback" className="block text-sm font-medium mb-2 font-inter" style={{ color: 'var(--danger)' }}>
                 What would you like to change?
               </label>
               <textarea
@@ -42,7 +45,12 @@ const ApprovalButtons = ({ onApprove, onReject, loading, isRevision = false }) =
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent font-inter machine-input"
+                style={{
+                  backgroundColor: '#0F1524',
+                  borderColor: 'var(--danger)',
+                  color: 'var(--text-primary)'
+                }}
                 placeholder="Please describe what changes you'd like to see in the script..."
               />
             </div>
@@ -50,14 +58,30 @@ const ApprovalButtons = ({ onApprove, onReject, loading, isRevision = false }) =
               <button
                 onClick={handleReject}
                 disabled={loading || !feedback.trim()}
-                className={`btn-danger ${loading || !feedback.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-6 py-3 text-base font-medium rounded-xl shadow-md transition-all duration-200 font-spaceg ${
+                  loading || !feedback.trim()
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:scale-105 focus:ring-2 focus:ring-red-300'
+                }`}
+                style={loading || !feedback.trim() ? {
+                  backgroundColor: '#2A3450',
+                  color: '#8390AD'
+                } : {
+                  background: 'linear-gradient(90deg, var(--danger), #ff4757)',
+                  color: 'white'
+                }}
               >
                 {loading ? 'Submitting...' : 'Submit Changes'}
               </button>
               <button
                 onClick={handleCancelReject}
                 disabled={loading}
-                className="btn-secondary"
+                className="px-6 py-3 text-base font-medium rounded-xl shadow-md transition-all duration-200 font-spaceg hover:scale-105 focus:ring-2 focus:ring-gray-300"
+                style={{
+                  backgroundColor: 'var(--bg-1)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-subtle)'
+                }}
               >
                 Cancel
               </button>
@@ -71,15 +95,20 @@ const ApprovalButtons = ({ onApprove, onReject, loading, isRevision = false }) =
           <button
             onClick={handleApprove}
             disabled={loading}
-            className={`group relative px-10 py-4 text-lg font-semibold text-white rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300 ${
+            className={`group relative px-10 py-4 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 font-spaceg ${
               loading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                ? 'cursor-not-allowed' 
+                : 'machine-cta hover:machine-cta-hover'
             }`}
+            style={loading ? {
+              backgroundColor: '#2A3450',
+              color: '#8390AD',
+              boxShadow: 'none'
+            } : {}}
           >
             {loading ? (
               <div className="flex items-center">
-                <div className="loading-spinner mr-3"></div>
+                <div className="loading-spinner mr-3" style={{ borderTopColor: '#8390AD' }}></div>
                 <span>Processing...</span>
               </div>
             ) : (
@@ -95,7 +124,12 @@ const ApprovalButtons = ({ onApprove, onReject, loading, isRevision = false }) =
           <button
             onClick={handleReject}
             disabled={loading}
-            className="group relative px-10 py-4 text-lg font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:border-orange-400 hover:bg-orange-50 focus:outline-none focus:ring-4 focus:ring-orange-300"
+            className="group relative px-10 py-4 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 font-spaceg"
+            style={{
+              backgroundColor: 'var(--bg-1)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-subtle)'
+            }}
           >
             <div className="flex items-center">
               <svg className="w-6 h-6 mr-3 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">

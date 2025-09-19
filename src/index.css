@@ -35,6 +35,13 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    /* Hide scrollbar for webkit browsers */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+  
+  html::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
   }
   
   body {
@@ -53,6 +60,23 @@
     min-height: 100vh;
     /* Add subtle grain texture using CSS */
     position: relative;
+    /* Hide scrollbar for webkit browsers */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+  
+  body::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
+  }
+  
+  /* Hide scrollbars for all elements */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+  
+  *::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
   }
   
   body::before {
@@ -284,5 +308,107 @@
   /* Ensure proper spacing for content */
   .content-with-sticky-header {
     /* No extra padding needed - sticky header pushes content naturally */
+  }
+
+  /* Feedback Dialog Styling - Minimal */
+  .feedback-dialog {
+    background: var(--bg-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 
+      0 10px 30px rgba(0,0,0,0.3),
+      0 0 0 1px rgba(255,94,102,0.1) inset;
+  }
+
+  .feedback-dialog-content {
+    position: relative;
+  }
+
+  .feedback-title {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  .feedback-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .feedback-textarea {
+    background: var(--bg-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+
+  .feedback-textarea:focus {
+    outline: none;
+    border-color: var(--danger);
+    box-shadow: 0 0 0 2px rgba(255,94,102,0.2);
+  }
+
+  .feedback-textarea::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  .feedback-submit-btn {
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .feedback-submit-btn:hover {
+    background: #ff4757;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,94,102,0.3);
+  }
+
+  .feedback-submit-btn:active {
+    transform: translateY(0);
+  }
+
+  .feedback-submit-btn:disabled {
+    background: var(--bg-3);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .feedback-cancel-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .feedback-cancel-btn:hover {
+    background: var(--bg-1);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
+
+  /* Simple animation for dialog appearance */
+  .feedback-dialog-enter {
+    animation: feedback-fade-in 0.3s ease-out;
+  }
+
+  @keyframes feedback-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

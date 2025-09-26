@@ -82,7 +82,12 @@ const CharacterReview = ({
   };
 
   const getCharacterName = (character) => {
-    // First try to get name from character.name if it exists
+    // First try to get name from character_name (new API field)
+    if (character?.character_name) {
+      return character.character_name;
+    }
+    
+    // Then try to get name from character.name if it exists
     if (character?.name) {
       return character.name;
     }

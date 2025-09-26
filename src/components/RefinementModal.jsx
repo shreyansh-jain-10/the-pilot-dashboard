@@ -8,12 +8,34 @@ const RefinementModal = ({
 }) => {
   const [feedback, setFeedback] = useState('');
 
-  const getCharacterName = (uniqueKey) => {
-    // Extract character name from unique_character_key
-    const parts = uniqueKey.split('_');
-    if (parts.length > 2) {
-      return parts.slice(2).join(' ').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const getCharacterName = (character) => {
+    // First try to get name from character_name (new API field)
+    if (character?.character_name) {
+      return character.character_name;
     }
+    
+    // Then try to get name from character.name if it exists
+    if (character?.name) {
+      return character.name;
+    }
+    
+    // Otherwise, extract from unique_character_key or character_id
+    const keyToUse = character?.unique_character_key || character?.character_id || '';
+    const parts = keyToUse.split('_');
+    
+    if (parts.length > 2) {
+      // Get the last part after the job ID and random string (e.g., "main_character")
+      const characterPart = parts.slice(2).join('_');
+      return characterPart
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    } else if (character?.character_id) {
+      // Fallback to character_id
+      return character.character_id
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
     return 'Character';
   };
 
@@ -39,7 +61,7 @@ const RefinementModal = ({
             Refine Character
           </h3>
           <p className="text-sm text-machine-secondary">
-            {getCharacterName(character.unique_character_key)}
+            {getCharacterName(character)}
           </p>
         </div>
         

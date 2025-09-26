@@ -170,7 +170,27 @@ export const submitApproval = async (approvalUrl, approvalData) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // If not JSON, get text and try to parse
+      const text = await response.text();
+      console.log('Approval API Response (text):', text);
+      
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.log('JSON parse error:', parseError);
+        console.log('Response text that failed to parse:', text);
+        throw new Error('Invalid response format from server');
+      }
+    }
+    
+    console.log('Final approval response data:', data);
     return data;
   } catch (error) {
     console.error('Error submitting approval:', error);

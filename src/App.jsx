@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import CampaignForm from './components/CampaignForm';
 import LoadingScreen from './components/LoadingScreen';
 import ScriptReview from './components/ScriptReview';
+import CharacterReview from './components/CharacterReview';
 import { submitCampaign, submitApproval } from './utils/api';
 
 function App() {
-  const [currentStep, setCurrentStep] = useState('form'); // 'form', 'loading', 'review'
+  const [currentStep, setCurrentStep] = useState('form'); // 'form', 'loading', 'review', 'agent2Loading', 'characterReview'
   const [campaignData, setCampaignData] = useState(null);
   const [scriptData, setScriptData] = useState(null);
   const [approvalUrl, setApprovalUrl] = useState('');
@@ -14,6 +15,12 @@ function App() {
   const [revisionCount, setRevisionCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Agent 2 states
+  const [agent2Loading, setAgent2Loading] = useState(false);
+  const [showCharacterReview, setShowCharacterReview] = useState(false);
+  const [characterData, setCharacterData] = useState(null);
+  const [approvalWebhook, setApprovalWebhook] = useState('');
 
   const handleCampaignSubmit = async (formData) => {
     setLoading(true);
@@ -51,21 +58,56 @@ function App() {
         feedback: ''
       });
 
-      if (response.success) {
-        // Script approved - ready for next agent
-        alert('Script approved! Ready for the next agent in the pipeline.');
-        // Reset to form for new campaign
-        setCurrentStep('form');
-        setScriptData(null);
-        setCampaignData(null);
-        setApprovalUrl('');
-        setJobId('');
-        setIsRevision(false);
-        setRevisionCount(0);
+      console.log('Script approval response:', response);
+
+      // Check if response has character data (successful approval)
+      if (response.data && Array.isArray(response.data) && response.approvalWebhook) {
+        // Script approved - Agent 2 has already generated characters
+        setCharacterData(response);
+        setApprovalWebhook(response.approvalWebhook);
+        setAgent2Loading(false);
+        setShowCharacterReview(true);
+        setCurrentStep('characterReview');
+      } else if (response.success) {
+        // Fallback for old API format - trigger Agent 2 (character generation)
+        setAgent2Loading(true);
+        setCurrentStep('agent2Loading');
+        
+        // Simulate Agent 2 processing time
+        setTimeout(() => {
+          // Mock character data for development
+          const mockCharacterData = {
+            data: [
+              {
+                success: true,
+                imageUrl: "https://the-pilot-bucket.s3.eu-north-1.amazonaws.com/multi-angle-images/job_1758578960647_el5b85zyr_main_character.png",
+                s3Key: "multi-angle-images/job_1758578960647_el5b85zyr_main_character.png",
+                unique_character_key: "job_1758578960647_el5b85zyr_main_character",
+                character_id: "main_character"
+              },
+              {
+                success: true,
+                imageUrl: "https://the-pilot-bucket.s3.eu-north-1.amazonaws.com/multi-angle-images/job_1758578960647_el5b85zyr_supporting_character.png",
+                s3Key: "multi-angle-images/job_1758578960647_el5b85zyr_supporting_character.png",
+                unique_character_key: "job_1758578960647_el5b85zyr_supporting_character",
+                character_id: "supporting_character"
+              }
+            ],
+            approvalWebhook: "https://gluagents.xyz/webhook-waiting/59373",
+            jobId: "job_1758578960647_el5b85zyr"
+          };
+          
+          setCharacterData(mockCharacterData);
+          setApprovalWebhook(mockCharacterData.approvalWebhook);
+          setAgent2Loading(false);
+          setShowCharacterReview(true);
+          setCurrentStep('characterReview');
+        }, 3000);
       } else {
         throw new Error(response.message || 'Failed to approve script');
       }
     } catch (err) {
+      console.error('Script approval error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -109,6 +151,132 @@ function App() {
     setCurrentStep('form');
   };
 
+  // Improved character refinement handler
+  const handleCharacterRefinement = async (characterKey, imageUrl, feedback, characterId) => {
+    console.log('Starting character refinement for:', characterKey);
+    
+    try {
+      const response = await submitApproval(approvalWebhook, {
+        action: "refine",
+        feedback: feedback,
+        unique_character_key: characterKey,
+        imageUrl: imageUrl,
+        character_id: characterId,
+        jobId: jobId
+      });
+
+      console.log('Character refinement response:', response);
+
+      // Handle the specific error format you mentioned
+      if (Array.isArray(response) && response.length > 0) {
+        const firstResponse = response[0];
+        if (firstResponse.success === false && firstResponse.error) {
+          // Extract error message from the nested error object
+          let errorMessage = 'Failed to refine character';
+          
+          if (firstResponse.error.Error) {
+            errorMessage = firstResponse.error.Error;
+          } else if (typeof firstResponse.error === 'string') {
+            errorMessage = firstResponse.error;
+          } else if (typeof firstResponse.error === 'object') {
+            // Try to find any error message in the error object
+            const errorValues = Object.values(firstResponse.error);
+            if (errorValues.length > 0 && typeof errorValues[0] === 'string') {
+              errorMessage = errorValues[0];
+            }
+          }
+          
+          throw new Error(errorMessage);
+        }
+      }
+
+      // Check if response indicates successful refinement
+      if (response.success && response.imageUrl) {
+        // Update character data with refined image
+        setCharacterData(prev => {
+          const updatedData = prev.data.map(char => {
+            if (char.unique_character_key === characterKey) {
+              console.log('Updating character image:', char.imageUrl, '->', response.imageUrl);
+              return { 
+                ...char, 
+                imageUrl: response.imageUrl,
+                character_id: response.character_id || char.character_id
+              };
+            }
+            return char;
+          });
+          return {
+            ...prev,
+            data: updatedData
+          };
+        });
+        
+        return Promise.resolve(); // Indicate successful refinement
+      } else if (response.data && Array.isArray(response.data)) {
+        // Fallback for old API format with data array
+        const refinedCharacter = response.data.find(char => 
+          char.unique_character_key === characterKey || char.character_id === characterId
+        );
+        
+        if (refinedCharacter) {
+          setCharacterData(prev => ({
+            ...prev,
+            data: prev.data.map(char => 
+              char.unique_character_key === characterKey 
+                ? { ...char, imageUrl: refinedCharacter.imageUrl }
+                : char
+            )
+          }));
+          return Promise.resolve(); // Indicate successful refinement
+        }
+      }
+      
+      throw new Error(response.message || 'Failed to refine character');
+    } catch (err) {
+      console.error('Character refinement error:', err);
+      throw err; // Re-throw to be caught by the CharacterReview component
+    }
+  };
+
+  const handleApproveAllCharacters = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await submitApproval(approvalWebhook, {
+        action: "approve_all",
+        jobId: jobId
+      });
+
+      console.log('Approve all characters response:', response);
+
+      // Check if response indicates success (various possible formats)
+      if (response.success || response.data || response.message === 'success' || response.status === 'success') {
+        // All characters approved - ready for next agent or complete
+        alert('All characters approved! Ready for the next agent in the pipeline.');
+        // Reset to form for new campaign
+        setCurrentStep('form');
+        setScriptData(null);
+        setCampaignData(null);
+        setApprovalUrl('');
+        setJobId('');
+        setIsRevision(false);
+        setRevisionCount(0);
+        setCharacterData(null);
+        setApprovalWebhook('');
+        setShowCharacterReview(false);
+        setAgent2Loading(false);
+      } else {
+        throw new Error(response.message || 'Failed to approve characters');
+      }
+    } catch (err) {
+      console.error('Approve all characters error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'form':
@@ -139,6 +307,24 @@ function App() {
           />
         );
 
+      case 'agent2Loading':
+        return (
+          <LoadingScreen
+            message="Generating character references..."
+          />
+        );
+
+      case 'characterReview':
+        return (
+          <CharacterReview
+            characterData={characterData}
+            onRefine={handleCharacterRefinement}
+            onApproveAll={handleApproveAllCharacters}
+            loading={loading}
+            onNavigateHome={() => setCurrentStep('form')}
+          />
+        );
+
       default:
         return null;
     }
@@ -159,7 +345,6 @@ function App() {
       position: 'relative'
     }}>
       {/* Sticky Header */}
-      {/* Sticky Header */}
       <div className="sticky-header w-full">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
@@ -172,15 +357,23 @@ function App() {
             <div className="hidden md:flex items-center space-x-6">
               <div className="flex items-center space-x-2 rounded-full px-4 py-2" style={{
                 backgroundColor: 'rgba(15, 21, 36, 0.8)',
-                border: '1px solid rgba(63, 228, 128, 0.3)',
+                border: currentStep === 'characterReview' ? '1px solid rgba(0, 229, 255, 0.3)' : '1px solid rgba(63, 228, 128, 0.3)',
                 backdropFilter: 'blur(10px)'
               }}>
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }}></div>
-                <span className="text-sm font-medium font-inter text-machine-primary">Script Generator</span>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ 
+                  backgroundColor: currentStep === 'characterReview' ? 'var(--acc-cyan)' : 'var(--success)' 
+                }}></div>
+                <span className="text-sm font-medium font-inter text-machine-primary">
+                  {currentStep === 'characterReview' ? 'Character Generator' : 'Script Generator'}
+                </span>
               </div>
               <div className="text-right">
-                <div className="text-sm font-semibold font-spaceg text-machine-primary">Ready to Create</div>
-                <div className="text-xs text-machine-tertiary">AI-Enhanced Series</div>
+                <div className="text-sm font-semibold font-spaceg text-machine-primary">
+                  {currentStep === 'characterReview' ? 'Character Generation' : 'Ready to Create'}
+                </div>
+                <div className="text-xs text-machine-tertiary">
+                  {currentStep === 'characterReview' ? 'AI-Enhanced Characters' : 'AI-Enhanced Series'}
+                </div>
               </div>
             </div>
           </div>
@@ -189,7 +382,6 @@ function App() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start">
@@ -216,8 +408,6 @@ function App() {
 
         {renderCurrentStep()}
       </div>
-
-
     </div>
   );
 }

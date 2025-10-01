@@ -24,7 +24,7 @@ const OrbAssistant = ({ onNext }) => {
       <div className="h-[calc(100vh-120px)] flex flex-col items-center justify-center px-6 overflow-hidden">
       {/* Orb Circle */}
       {/* Advanced AI Assistant Orb */}
-      <div className="relative mb-12">
+      <div className="relative mb-12 mt-[76px]">
         {/* Pulsing outer glow rings */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-80 h-80 rounded-full animate-pulse" style={{

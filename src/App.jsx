@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import OrbAssistant from './components/OrbAssistant';
+import TuneMachine from './components/TuneMachine';
+import AppLauncher from './components/AppLauncher';
 import CampaignForm from './components/CampaignForm';
 import LoadingScreen from './components/LoadingScreen';
 import ScriptReview from './components/ScriptReview';
@@ -6,7 +9,7 @@ import CharacterReview from './components/CharacterReview';
 import { submitCampaign, submitApproval } from './utils/api';
 
 function App() {
-  const [currentStep, setCurrentStep] = useState('form'); // 'form', 'loading', 'review', 'agent2Loading', 'characterReview'
+  const [currentStep, setCurrentStep] = useState('orb'); // 'orb', 'tune', 'launcher', 'form', 'loading', 'review', 'agent2Loading', 'characterReview'
   const [campaignData, setCampaignData] = useState(null);
   const [scriptData, setScriptData] = useState(null);
   const [approvalUrl, setApprovalUrl] = useState('');
@@ -151,6 +154,23 @@ function App() {
     setCurrentStep('form');
   };
 
+  // Navigation handlers for new pages
+  const handleOrbNext = () => {
+    setCurrentStep('tune');
+  };
+
+  const handleTuneNext = () => {
+    setCurrentStep('launcher');
+  };
+
+  const handleLaunchVideoCampaign = () => {
+    setCurrentStep('form');
+  };
+
+  const handleHome = () => {
+    setCurrentStep('orb');
+  };
+
   // Improved character refinement handler
   const handleCharacterRefinement = async (characterKey, imageUrl, feedback, characterId) => {
     console.log('Starting character refinement for:', characterKey);
@@ -279,12 +299,52 @@ function App() {
 
   const renderCurrentStep = () => {
     switch (currentStep) {
+      case 'orb':
+        return (
+          <OrbAssistant
+            onNext={handleOrbNext}
+          />
+        );
+
+      case 'tune':
+        return (
+          <TuneMachine
+            onNext={handleTuneNext}
+            onHome={handleHome}
+          />
+        );
+
+      case 'launcher':
+        return (
+          <AppLauncher
+            onLaunchVideoCampaign={handleLaunchVideoCampaign}
+            onHome={handleHome}
+          />
+        );
+
       case 'form':
         return (
-          <CampaignForm
-            onSubmit={handleCampaignSubmit}
-            loading={loading}
-          />
+          <div className="relative">
+            {/* Home Button for Campaign Form */}
+            <button
+              onClick={handleHome}
+              className="absolute top-4 left-4 z-10 group flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 hover:scale-105"
+              style={{
+                background: 'rgba(15, 21, 36, 0.8)',
+                border: '1px solid rgba(0, 229, 255, 0.3)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <svg className="w-4 h-4 text-acc-cyan group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="text-sm font-medium text-machine-primary font-inter">Home</span>
+            </button>
+            <CampaignForm
+              onSubmit={handleCampaignSubmit}
+              loading={loading}
+            />
+          </div>
         );
 
       case 'loading':
@@ -331,7 +391,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen" style={{
+    <div className={`${currentStep === 'orb' || currentStep === 'tune' || currentStep === 'launcher' ? 'h-screen overflow-hidden' : 'min-h-screen'}`} style={{
       backgroundColor: 'var(--bg-0)',
       backgroundImage: `
         radial-gradient(1200px 900px at 15% -15%, rgba(255,20,147,.18) 0%, rgba(126,107,255,.15) 25%, transparent 70%),
@@ -360,19 +420,31 @@ function App() {
                 border: currentStep === 'characterReview' ? '1px solid rgba(0, 229, 255, 0.3)' : '1px solid rgba(63, 228, 128, 0.3)',
                 backdropFilter: 'blur(10px)'
               }}>
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ 
-                  backgroundColor: currentStep === 'characterReview' ? 'var(--acc-cyan)' : 'var(--success)' 
-                }}></div>
+                <div 
+                  className="w-2 h-2 rounded-full animate-pulse" 
+                  style={{ 
+                    backgroundColor: currentStep === 'characterReview' ? 'var(--acc-cyan)' : 'var(--success)'
+                  }}
+                ></div>
                 <span className="text-sm font-medium font-inter text-machine-primary">
-                  {currentStep === 'characterReview' ? 'Character Generator' : 'Script Generator'}
+                  {currentStep === 'characterReview' ? 'Character Generator' : 
+                   currentStep === 'orb' ? 'Welcome' :
+                   currentStep === 'tune' ? 'Tune the MACHINE' :
+                   currentStep === 'launcher' ? 'App launcher' : 'Script Generator'}
                 </span>
               </div>
               <div className="text-right">
                 <div className="text-sm font-semibold font-spaceg text-machine-primary">
-                  {currentStep === 'characterReview' ? 'Character Generation' : 'Ready to Create'}
+                  {currentStep === 'characterReview' ? 'Character Generation' : 
+                   currentStep === 'orb' ? 'Welcome to THE MACHINE' :
+                   currentStep === 'tune' ? 'Brand Identity Setup' :
+                   currentStep === 'launcher' ? 'Choose Your Module' : 'Ready to Create'}
                 </div>
                 <div className="text-xs text-machine-tertiary">
-                  {currentStep === 'characterReview' ? 'AI-Enhanced Characters' : 'AI-Enhanced Series'}
+                  {currentStep === 'characterReview' ? 'AI-Enhanced Characters' : 
+                   currentStep === 'orb' ? 'Your AI Creative Companion' :
+                   currentStep === 'tune' ? 'Upload and Manage Assets' :
+                   currentStep === 'launcher' ? 'Select Creative Tools' : 'AI-Enhanced Series'}
                 </div>
               </div>
             </div>
@@ -381,7 +453,7 @@ function App() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+      <div className={`max-w-7xl mx-auto px-6 lg:px-8 ${currentStep === 'orb' || currentStep === 'tune' || currentStep === 'launcher' ? 'h-full flex flex-col' : 'py-8'}`}>
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start">
